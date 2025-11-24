@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Tekten Multimédia - Expert en matériel informatique, PC gamer sur mesure et dépannage à Saint-Ouen-l'Aumône.">
+    <title>Tekten Multimédia | L'Excellence Informatique</title>
+
+    <!-- Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        tekten: {
+                            dark: '#0f172a',
+                            primary: '#6366f1',
+                            secondary: '#a855f7',
+                            accent: '#ec4899',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body
+    class="bg-slate-900 text-slate-100 font-sans antialiased selection:bg-indigo-500 selection:text-white overflow-x-hidden">
+
+    <!-- Chatbot Container -->
+    <div id="chatbot-container"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 top-0 transition-all duration-300" id="navbar" aria-label="Main Navigation">
+        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-md border-b border-white/10"></div>
+        <div class="container mx-auto px-6 py-4 relative flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold font-serif tracking-tighter flex items-center gap-2 group"
+                aria-label="Tekten Home">
+                <div
+                    class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white group-hover:rotate-12 transition-transform">
+                    T
+                </div>
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">TEKTEN</span>
+            </a>
+
+            <div class="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-300">
+                <a href="index.html" class="text-white hover:text-indigo-400 transition-colors relative group">
+                    Accueil
+                    <span
+                        class="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-500 transition-all group-hover:w-full"></span>
+                </a>
+                <a href="boutique.html" class="hover:text-indigo-400 transition-colors relative group">
+                    Boutique
+                    <span
+                        class="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-500 transition-all group-hover:w-full"></span>
+                </a>
+                <a href="configurateur.html" class="hover:text-indigo-400 transition-colors relative group">
+                    PC Builder
+                    <span
+                        class="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-500 transition-all group-hover:w-full"></span>
+                </a>
+                <a href="contact.html" class="hover:text-indigo-400 transition-colors relative group">
+                    Contact
+                    <span
+                        class="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-500 transition-all group-hover:w-full"></span>
+                </a>
+            </div>
+
+            <div class="flex items-center space-x-6">
+                <button onclick="window.toggleChatbot()"
+                    class="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all text-xs font-bold uppercase tracking-wider"
+                    aria-label="Ouvrir l'assistant IA">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    <span>Assistant IA</span>
+                </button>
+
+                <button onclick="window.toggleCart(true)" class="relative group" aria-label="Ouvrir le panier">
+                    <div class="p-2 rounded-full hover:bg-white/10 transition-colors">
+                        <i data-lucide="shopping-cart"
+                            class="w-5 h-5 text-slate-300 group-hover:text-white transition-colors"></i>
+                    </div>
+                    <span id="cart-count"
+                        class="absolute -top-1 -right-1 bg-indigo-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-slate-900 transform scale-0 transition-transform duration-300">0</span>
+                </button>
+
+                <button class="md:hidden text-slate-300 hover:text-white" aria-label="Menu mobile">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Cart Sidebar -->
+    <div id="cart-overlay"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0"
+        aria-hidden="true"></div>
+
+    <aside id="cart-sidebar"
+        class="fixed inset-y-0 right-0 w-full max-w-md bg-slate-900 border-l border-white/10 z-[70] shadow-2xl translate-x-full transition-transform duration-300 flex flex-col"
+        aria-label="Panier">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center bg-slate-800/50">
+            <h2 class="font-serif font-bold text-xl text-white flex items-center gap-2">
+                <i data-lucide="shopping-bag" class="w-5 h-5 text-indigo-400"></i>
+                Mon Panier
+            </h2>
+            <button id="cart-close"
+                class="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-400 hover:text-white"
+                aria-label="Fermer le panier">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div id="cart-items" class="flex-1 p-6 overflow-y-auto space-y-4">
+            <!-- Items injected via JS -->
+        </div>
+
+        <div class="p-6 border-t border-white/10 bg-slate-800/50">
+            <div class="flex justify-between items-center mb-6">
+                <span class="text-slate-400">Total</span>
+                <span id="cart-total" class="text-2xl font-bold text-white">0,00 €</span>
+            </div>
+            <a href="contact.html"
+                class="block w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-center transition-colors shadow-lg shadow-indigo-500/20">
+                Contactez-nous pour commander
+            </a>
+        </div>
+    </aside>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="relative min-h-screen flex items-center pt-20 overflow-hidden">
+            <!-- Background Elements -->
+            <div class="absolute inset-0 z-0 pointer-events-none">
+                <div class="absolute top-0 left-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-[128px] animate-pulse">
+                </div>
+                <div
+                    class="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-[128px] animate-pulse delay-1000">
+                </div>
+                <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20">
+                </div>
+            </div>
+
+            <div class="container mx-auto px-6 relative z-10 grid lg:grid-cols-2 gap-16 items-center">
+                <div class="text-center lg:text-left space-y-8 animate-fade-in-up">
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold uppercase tracking-wider mb-4">
+                        <span class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
+                        Nouvelle Collection 2024
+                    </div>
+
+                    <h1 class="text-5xl lg:text-7xl font-bold font-serif leading-tight">
+                        L'Art de la <br>
+                        <span
+                            class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Performance.</span>
+                    </h1>
+
+                    <p class="text-lg text-slate-400 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                        Découvrez une sélection exclusive de matériel informatique haute performance.
+                        Assemblage sur mesure, composants premium et expertise passionnée à Saint-Ouen-l'Aumône.
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                        <a href="configurateur.html"
+                            class="px-8 py-4 rounded-xl bg-white text-slate-900 font-bold hover:bg-slate-100 transition-all transform hover:-translate-y-1 shadow-lg shadow-white/10 flex items-center justify-center gap-2">
+                            <i data-lucide="cpu" class="w-5 h-5"></i>
+                            Créer mon PC
+                        </a>
+                        <a href="boutique.html"
+                            class="px-8 py-4 rounded-xl bg-slate-800 text-white border border-white/10 font-bold hover:bg-slate-700 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                            Voir le catalogue
+                        </a>
+                    </div>
+
+                    <div class="pt-8 flex items-center justify-center lg:justify-start gap-8 text-slate-500">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="shield-check" class="w-5 h-5 text-indigo-500"></i>
+                            <span class="text-sm">Garantie 2 ans</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="truck" class="w-5 h-5 text-indigo-500"></i>
+                            <span class="text-sm">Livraison Rapide</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="star" class="w-5 h-5 text-indigo-500"></i>
+                            <span class="text-sm">4.9/5 Avis</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative hidden lg:block perspective-1000">
+                    <div
+                        class="relative z-10 transform rotate-y-12 rotate-x-6 hover:rotate-0 transition-transform duration-700 ease-out">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-3xl blur-2xl opacity-30 animate-glow">
+                        </div>
+                        <img src="https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=800&q=80"
+                            alt="Gaming PC Setup"
+                            class="relative rounded-3xl shadow-2xl border border-white/10 w-full object-cover h-[600px]">
+
+                        <!-- Floating Cards -->
+                        <div
+                            class="absolute -left-6 top-1/4 bg-slate-800/90 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-xl animate-float delay-0">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center text-green-400">
+                                    <i data-lucide="check" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-slate-400">Status</p>
+                                    <p class="font-bold text-sm">En Stock</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            class="absolute -right-8 bottom-1/4 bg-slate-800/90 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-xl animate-float delay-1000">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                                    <i data-lucide="zap" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-slate-400">Performance</p>
+                                    <p class="font-bold text-sm">Ultra Rapide</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Brands Section -->
+        <div class="border-y border-white/5 bg-slate-900/50 backdrop-blur-sm">
+            <div class="container mx-auto px-6 py-12">
+                <p class="text-center text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-8">Partenaires
+                    Officiels</p>
+                <div
+                    class="flex flex-wrap justify-center gap-12 md:gap-24 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+                    <span
+                        class="text-2xl font-bold text-white hover:text-indigo-400 transition-colors cursor-default">ASUS</span>
+                    <span
+                        class="text-2xl font-bold text-white hover:text-indigo-400 transition-colors cursor-default">MSI</span>
+                    <span
+                        class="text-2xl font-bold text-white hover:text-indigo-400 transition-colors cursor-default">NVIDIA</span>
+                    <span
+                        class="text-2xl font-bold text-white hover:text-indigo-400 transition-colors cursor-default">AMD</span>
+                    <span
+                        class="text-2xl font-bold text-white hover:text-indigo-400 transition-colors cursor-default">CORSAIR</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Featured Products -->
+        <section class="py-24 relative overflow-hidden">
+            <div class="absolute top-1/2 right-0 w-96 h-96 bg-indigo-600/10 rounded-full blur-[128px]"></div>
+
+            <div class="container mx-auto px-6 relative z-10">
+                <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+                    <div>
+                        <h2 class="text-4xl font-serif font-bold mb-4">Derniers Arrivages</h2>
+                        <p class="text-slate-400 max-w-md">Le meilleur de la technologie actuelle, sélectionné par nos
+                            experts pour des performances sans compromis.</p>
+                    </div>
+                    <a href="boutique.html"
+                        class="group flex items-center gap-2 text-indigo-400 font-bold hover:text-indigo-300 transition-colors">
+                        Voir tout le catalogue
+                        <i data-lucide="arrow-right"
+                            class="w-4 h-4 transform group-hover:translate-x-1 transition-transform"></i>
+                    </a>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Product Card 1 -->
+                    <div
+                        class="group relative bg-slate-800 rounded-3xl overflow-hidden border border-white/5 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/10">
+                        <div class="absolute top-4 left-4 z-20">
+                            <span
+                                class="bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">Nouveau</span>
+                        </div>
+                        <div class="h-64 overflow-hidden bg-slate-700/50 relative">
+                            <img src="https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=800"
+                                class="w-full h-full object-cover transform group-hover:scale-110 transition duration-700"
+                                alt="Dell XPS 15">
+                            <div
+                                class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60">
+                            </div>
+
+                            <button onclick="window.addToCart(101, 'Dell XPS 15', 2199)"
+                                class="absolute bottom-4 right-4 bg-white text-slate-900 p-3 rounded-full shadow-lg transform translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 hover:bg-indigo-500 hover:text-white"
+                                aria-label="Ajouter au panier">
+                                <i data-lucide="plus" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="font-bold text-xl mb-2 group-hover:text-indigo-400 transition-colors">Dell XPS 15
+                            </h3>
+                            <p class="text-slate-400 text-sm mb-4 line-clamp-2">L'ultime ultrabook pour les créateurs.
+                                Écran OLED 4K, Intel Core i9.</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-2xl font-bold text-white">2 199 €</span>
+                                <div class="flex gap-1">
+                                    <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i>
+                                    <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i>
+                                    <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i>
+                                    <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i>
+                                    <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Card 2 -->
+                    <div
+                        class="group relative bg-slate-800 rounded-3xl overflow-hidden border border-white/5 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/10">
+                        <div class="h-64 overflow-hidden bg-slate-700/50 relative">
+                            <img src="https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=800"
+                                class="w-full h-full object-cover transform group-hover:scale-110 transition duration-700"
+                                alt="RTX 4070 Ti">
+                            <div
+                                class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60">
+                            </div>
+                            <button onclick="window.addToCart(102, 'RTX 4070 Ti', 899)"
+                                class="absolute bottom-4 right-4 bg-white text-slate-900 p-3 rounded-full shadow-lg transform translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 hover:bg-indigo-500 hover:text-white"
+                                aria-label="Ajouter au panier">
+                                <i data-lucide="plus" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="font-bold text-xl mb-2 group-hover:text-indigo-400 transition-colors">RTX 4070 Ti
+                                Super</h3>
+                            <p class="text-slate-400 text-sm mb-4 line-clamp-2">La puissance graphique à l'état pur.
+                                Architecture Ada Lovelace.</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-2xl font-bold text-white">899 €</span>
+                                <div class="flex gap-1">
+                                    <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i>
+                                    <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i>
+                                    <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i>
+                                    <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i>
+                                    <i data-lucide="star" class="w-4 h-4 text-slate-600"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Card 3 -->
+                    <div
+                        class="group relative bg-slate-800 rounded-3xl overflow-hidden border border-white/5 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/10">
+                        <div class="h-64 overflow-hidden bg-slate-700/50 relative">
+                            <img src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=800"
+                                class="w-full h-full object-cover transform group-hover:scale-110 transition duration-700"
+                                alt="iPad Air M2">
+                            <div
+                                class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60">
+                            </div>
+                            <button onclick="window.addToCart(103, 'iPad Air M2', 789)"
+                                class="absolute bottom-4 right-4 bg-white text-slate-900 p-3 rounded-full shadow-lg transform translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 hover:bg-indigo-500 hover:text-white"
+                                aria-label="Ajouter au panier">
+                                <i data-lucide="plus" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="font-bold text-xl mb-2 group-hover:text-indigo-400 transition-colors">iPad Air M2
+                            </h3>
+                            <p class="text-slate-400 text-sm mb-4 line-clamp-2">Puissance et portabilité. Puce M2, écran
+                                Liquid Retina.</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-2xl font-bold text-white">789 €</span>
+                                <div class="flex gap-1">
+                                    <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i>
+                                    <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i>
+                                    <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i>
+                                    <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i>
+                                    <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Services Section -->
+        <section class="py-24 bg-slate-800/50 border-y border-white/5">
+            <div class="container mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
+                <div class="order-2 lg:order-1">
+                    <div class="relative">
+                        <div
+                            class="absolute -inset-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl blur-xl opacity-20">
+                        </div>
+                        <img src="https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=800"
+                            class="relative rounded-3xl shadow-2xl border border-white/10 rotate-2 hover:rotate-0 transition duration-500"
+                            alt="Atelier de réparation">
+                    </div>
+                </div>
+
+                <div class="order-1 lg:order-2 space-y-8">
+                    <h2 class="text-4xl font-serif font-bold">L'Atelier Expert</h2>
+                    <p class="text-slate-400 text-lg leading-relaxed">
+                        Notre équipe de techniciens certifiés prend soin de votre matériel.
+                        Du simple dépannage à l'assemblage de stations de travail complexes,
+                        nous garantissons une intervention rapide et soignée.
+                    </p>
+
+                    <div class="space-y-4">
+                        <div
+                            class="flex items-start gap-4 p-4 rounded-xl bg-slate-800 border border-white/5 hover:border-indigo-500/30 transition-colors">
+                            <div class="p-3 bg-indigo-500/10 rounded-lg text-indigo-400">
+                                <i data-lucide="activity" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg">Diagnostic Express</h3>
+                                <p class="text-slate-400 text-sm">Identification de la panne en moins de 24h.</p>
+                            </div>
+                        </div>
+
+                        <div
+                            class="flex items-start gap-4 p-4 rounded-xl bg-slate-800 border border-white/5 hover:border-indigo-500/30 transition-colors">
+                            <div class="p-3 bg-purple-500/10 rounded-lg text-purple-400">
+                                <i data-lucide="cpu" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg">Montage Sur Mesure</h3>
+                                <p class="text-slate-400 text-sm">Assemblage soigné, cable management parfait.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="contact.html"
+                        class="inline-flex items-center gap-2 text-indigo-400 font-bold hover:text-indigo-300 transition-colors mt-4">
+                        Prendre rendez-vous
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 pt-20 pb-10 border-t border-white/10">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-12 mb-16">
+                <div class="space-y-6">
+                    <a href="index.html" class="text-2xl font-bold font-serif tracking-tighter flex items-center gap-2"
+                        aria-label="Tekten Home">
+                        <div
+                            class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white">
+                            T</div>
+                        <span class="text-white">TEKTEN</span>
+                    </a>
+                    <p class="text-slate-400 text-sm leading-relaxed">
+                        Votre partenaire de confiance pour tout l'univers informatique.
+                        Expertise, conseil et passion depuis 2024.
+                    </p>
+                    <div class="flex gap-4">
+                        <a href="#"
+                            class="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-indigo-600 hover:text-white transition-all"
+                            aria-label="Facebook">
+                            <i data-lucide="facebook" class="w-5 h-5"></i>
+                        </a>
+                        <a href="#"
+                            class="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-indigo-600 hover:text-white transition-all"
+                            aria-label="Instagram">
+                            <i data-lucide="instagram" class="w-5 h-5"></i>
+                        </a>
+                        <a href="#"
+                            class="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-indigo-600 hover:text-white transition-all"
+                            aria-label="Twitter">
+                            <i data-lucide="twitter" class="w-5 h-5"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-white mb-6">Navigation</h4>
+                    <ul class="space-y-4 text-sm text-slate-400">
+                        <li><a href="index.html" class="hover:text-indigo-400 transition-colors">Accueil</a></li>
+                        <li><a href="boutique.html" class="hover:text-indigo-400 transition-colors">Boutique</a></li>
+                        <li><a href="configurateur.html" class="hover:text-indigo-400 transition-colors">PC Builder</a>
+                        </li>
+                        <li><a href="contact.html" class="hover:text-indigo-400 transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-white mb-6">Légal</h4>
+                    <ul class="space-y-4 text-sm text-slate-400">
+                        <li><a href="#" class="hover:text-indigo-400 transition-colors">CGV</a></li>
+                        <li><a href="#" class="hover:text-indigo-400 transition-colors">Mentions Légales</a></li>
+                        <li><a href="#" class="hover:text-indigo-400 transition-colors">Politique de confidentialité</a>
+                        </li>
+                        <li><a href="#" class="hover:text-indigo-400 transition-colors">Retours</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-white mb-6">Contact</h4>
+                    <ul class="space-y-4 text-sm text-slate-400">
+                        <li class="flex items-start gap-3">
+                            <i data-lucide="map-pin" class="w-5 h-5 text-indigo-500 shrink-0"></i>
+                            <span>27 Rue du Général Leclerc<br>95310 Saint-Ouen-l'Aumône</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <i data-lucide="phone" class="w-5 h-5 text-indigo-500 shrink-0"></i>
+                            <span class="text-white font-bold">01 30 37 30 31</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <i data-lucide="mail" class="w-5 h-5 text-indigo-500 shrink-0"></i>
+                            <span>contact@tekten.fr</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div
+                class="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500">
+                <p>&copy; 2024 Tekten Multimédia. Tous droits réservés.</p>
+                <p>Designed with <span class="text-red-500">♥</span> by Tekten Team</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

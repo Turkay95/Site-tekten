@@ -1,0 +1,180 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700&display=swap');
+
+:root {
+    /* --- COLORS --- */
+    --color-bg: #0f172a;
+    --color-text: #f8fafc;
+    --color-primary: #6366f1;
+    /* Indigo 500 */
+    --color-secondary: #a855f7;
+    /* Purple 500 */
+    --color-accent: #ec4899;
+    /* Pink 500 */
+
+    /* --- GLASSMORPHISM --- */
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-blur: 12px;
+
+    /* --- ANIMATIONS --- */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --- RESET & BASE --- */
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Playfair Display', serif;
+}
+
+/* --- UTILITIES --- */
+.glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+}
+
+.glass-card {
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.text-gradient {
+    background: linear-gradient(to right, #818cf8, #c084fc, #f472b6);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* --- ANIMATIONS --- */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.8s var(--ease-out-expo) forwards;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-15px);
+    }
+}
+
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes glow {
+    from {
+        box-shadow: 0 0 10px -5px var(--color-primary);
+    }
+
+    to {
+        box-shadow: 0 0 25px 5px var(--color-primary);
+    }
+}
+
+.animate-glow {
+    animation: glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loader {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* --- COMPONENT SPECIFIC --- */
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+/* 3D Perspective */
+.perspective-1000 {
+    perspective: 1000px;
+}
+
+/* Chatbot */
+#chatbot-window {
+    transition: transform 0.4s var(--ease-out-expo), opacity 0.4s var(--ease-out-expo);
+    transform-origin: bottom right;
+}
+
+/* Cart Sidebar */
+#cart-sidebar {
+    transition: transform 0.4s var(--ease-out-expo);
+}
+
+/* Builder Parts */
+.part-card {
+    transition: all 0.2s ease;
+}
+
+.part-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.part-card.selected {
+    border-color: var(--color-primary);
+    background-color: rgba(99, 102, 241, 0.05);
+    box-shadow: 0 0 0 1px var(--color-primary);
+}
