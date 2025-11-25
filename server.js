@@ -126,7 +126,7 @@ const PRODUCT_CATEGORIES = ['desktop', 'laptop', 'mobile', 'accessoire'];
 // Middleware d'authentification
 const requireAuth = (req, res, next) => {
   if (!req.session.userId) {
-    return res.redirect('/admin/login');
+    return res.redirect('/tekten1453istanbul');
   }
   next();
 };
@@ -138,12 +138,12 @@ app.get('/configurateur', (req, res) => res.sendFile(path.join(__dirname, 'confi
 app.get('/contact', (req, res) => res.sendFile(path.join(__dirname, 'contact.html')));
 
 // Routes d'administration
-app.get('/admin/login', (req, res) => {
+app.get('/tekten1453istanbul', (req, res) => {
   if (req.session.userId) return res.redirect('/admin/dashboard');
   res.render('admin/login', { layout: false, error: null, username: '' });
 });
 
-app.post('/admin/login', async (req, res) => {
+app.post('/tekten1453istanbul', async (req, res) => {
   const { password } = req.body;
   const username = (req.body.username || '').trim();
   try {
@@ -175,7 +175,7 @@ app.get('/admin/dashboard', requireAuth, async (req, res) => {
 });
 
 app.get('/admin/logout', (req, res) => {
-  req.session.destroy(() => res.redirect('/admin/login'));
+  req.session.destroy(() => res.redirect('/tekten1453istanbul'));
 });
 
 app.post('/admin/settings', requireAuth, async (req, res) => {
@@ -199,6 +199,10 @@ app.get('/api/settings', async (req, res) => {
   } catch (e) {
     res.json({ shopFromDb: true, configFromDb: true });
   }
+});
+
+app.get('/api/auth/status', (req, res) => {
+  res.json({ isAdmin: !!req.session.userId });
 });
 
 app.get('/api/shop', async (req, res) => {
@@ -227,29 +231,51 @@ app.get('/api/config', async (req, res) => {
   }
 });
 
+app.get('/api/featured', async (req, res) => {
+  try {
+    const products = await Product.findAll({
+      where: { featured: true, published: true },
+      limit: 6,
+      order: [['createdAt', 'DESC']]
+    });
+    res.json(products);
+  } catch (e) {
+    console.error('API featured error:', e);
+    res.status(500).json([]);
+  }
+});
+
 // Admin Products Routes
 app.get('/admin/products', requireAuth, async (req, res) => {
   try {
-    const products = await Product.findAll({ order: [['createdAt', 'DESC']] });
-    res.render('admin/products/index', { title: 'Produits', products });
+    const products = await Product.findAll({ where: { featured: false }, order: [['createdAt', 'DESC']] });
+    res.render('admin/products/index', { title: 'Gestion de la Boutique', products });
   } catch (e) {
     res.status(500).send('Erreur serveur');
   }
 });
 
 app.get('/admin/products/add', requireAuth, (req, res) => {
-  res.render('admin/products/add', { title: 'Ajouter un produit', categories: PRODUCT_CATEGORIES });
+  const isFeatured = req.query.featured === 'true';
+  res.render('admin/products/add', { title: isFeatured ? 'Ajouter un Arrivage' : 'Ajouter un produit', categories: PRODUCT_CATEGORIES, isFeatured });
 });
 
 app.post('/admin/products/add', requireAuth, upload.single('image'), async (req, res) => {
   try {
-    const { name, description, price, category, stock, featured } = req.body;
+    const { name, description, price, category, stock, featured, returnUrl } = req.body;
     const image = req.file ? '/uploads/' + req.file.filename : null;
     await Product.create({
       name, description, price: parseFloat(price), category, image,
       stock: parseInt(stock || '0', 10), featured: !!featured, published: req.body.published === 'on'
     });
-    res.redirect('/admin/products');
+    if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
+      return res.json({ success: true });
+    }
+    if (returnUrl) {
+      res.redirect(returnUrl);
+    } else {
+      res.redirect('/admin/products');
+    }
   } catch (e) {
     res.status(500).send('Erreur serveur');
   }
@@ -282,6 +308,9 @@ app.put('/admin/products/:id', requireAuth, upload.single('image'), async (req, 
       name, description, price: parseFloat(price), category, image,
       stock: parseInt(stock || '0', 10), featured: !!featured, published: req.body.published === 'on'
     });
+    if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
+      return res.json({ success: true });
+    }
     res.redirect('/admin/products');
   } catch (e) {
     res.status(500).send('Erreur serveur');
@@ -298,9 +327,37 @@ app.delete('/admin/products/:id', requireAuth, async (req, res) => {
       }
       await product.destroy();
     }
+    if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
+      return res.json({ success: true });
+    }
     res.redirect('/admin/products');
   } catch (e) {
     res.status(500).send('Erreur serveur');
+  }
+});
+
+app.get('/admin/featured', requireAuth, async (req, res) => {
+  try {
+    const products = await Product.findAll({ where: { featured: true }, order: [['createdAt', 'DESC']] });
+    res.render('admin/featured', { title: 'Derniers Arrivages', products, categories: PRODUCT_CATEGORIES });
+  } catch (e) {
+    console.error('Erreur featured:', e);
+    res.status(500).send('Erreur serveur');
+  }
+});
+
+app.post('/admin/products/:id/featured', requireAuth, async (req, res) => {
+  try {
+    const product = await Product.findByPk(req.params.id);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Produit non trouvé' });
+    }
+    product.featured = !product.featured;
+    await product.save();
+    res.json({ success: true, featured: product.featured });
+  } catch (e) {
+    console.error('Erreur toggle featured:', e);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
   }
 });
 
@@ -386,7 +443,7 @@ app.delete('/admin/components/:id', requireAuth, async (req, res) => {
 // Centralized Error Handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).send('Une erreur interne est survenue. Veuillez réessayer plus tard.');
+  res.status(500).send('<h1>Erreur Serveur</h1><pre>' + err.stack + '</pre>');
 });
 
 // Initialisation de la base de données
@@ -410,6 +467,7 @@ async function initializeDatabase() {
 const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, async () => {
   console.log(`Serveur démarré sur http://localhost:${PORT}`);
+  console.log(`Accès Admin : http://localhost:${PORT}/tekten1453istanbul`);
   await initializeDatabase();
 });
 

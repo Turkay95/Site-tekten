@@ -571,7 +571,76 @@ const Builder = {
 };
 
 /* =========================================
-   6. INITIALIZATION
+   6. HOME MODULE
+   ========================================= */
+const Home = {
+    async init() {
+        if (!Utils.$('#featured-products')) return;
+        await this.loadFeatured();
+    },
+
+    async loadFeatured() {
+        try {
+            const response = await fetch('/api/featured');
+            if (!response.ok) throw new Error('Network response was not ok');
+            const products = await response.json();
+            this.render(products);
+        } catch (error) {
+            console.error('Failed to load featured products', error);
+            const container = Utils.$('#featured-products');
+            if (container) container.innerHTML = '<p class="text-red-400 text-center col-span-full">Impossible de charger les derniers arrivages.</p>';
+        }
+    },
+
+    render(products) {
+        const container = Utils.$('#featured-products');
+        if (!container) return;
+
+        if (products.length === 0) {
+            container.innerHTML = '<p class="text-slate-400 text-center col-span-full">Aucun produit mis en avant pour le moment.</p>';
+            return;
+        }
+
+        container.innerHTML = products.map(p => `
+            <div class="group relative bg-slate-800 rounded-3xl overflow-hidden border border-white/5 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/10">
+                <div class="absolute top-4 left-4 z-20">
+                    <span class="bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">Nouveau</span>
+                </div>
+                <div class="h-64 overflow-hidden bg-slate-700/50 relative">
+                    <img src="${p.image || 'https://via.placeholder.com/500x300?text=No+Image'}" 
+                         class="w-full h-full object-cover transform group-hover:scale-110 transition duration-700" 
+                         alt="${Utils.escapeHtml(p.name)}">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60"></div>
+                    ${p.stock > 0 ? `
+                    <button onclick="window.addToCart(${p.id}, '${Utils.escapeHtml(p.name)}', ${p.price})" 
+                            class="absolute bottom-4 right-4 bg-white text-slate-900 p-3 rounded-full shadow-lg transform translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 hover:bg-indigo-500 hover:text-white" 
+                            aria-label="Ajouter au panier">
+                        <i data-lucide="plus" class="w-5 h-5"></i>
+                    </button>` : ''}
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 group-hover:text-indigo-400 transition-colors">${Utils.escapeHtml(p.name)}</h3>
+                    <p class="text-slate-400 text-sm mb-4 line-clamp-2">${Utils.escapeHtml(p.description || '')}</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-2xl font-bold text-white">${Utils.formatPrice(p.price)}</span>
+                        <div class="flex gap-1">
+                            <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i>
+                            <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i>
+                            <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i>
+                            <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i>
+                            <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        if (window.lucide) lucide.createIcons();
+    }
+};
+
+/* =========================================
+   7. INITIALIZATION
    ========================================= */
 document.addEventListener('DOMContentLoaded', () => {
     try {
@@ -579,6 +648,7 @@ document.addEventListener('DOMContentLoaded', () => {
         Cart.init();
         Shop.init();
         Builder.init();
+        Home.init();
 
         // Initialize Lucide icons
         if (window.lucide) lucide.createIcons();

@@ -1,0 +1,53 @@
+==============================================
+INSTRUCTIONS POUR AJOUTER LES ROUTES FEATURED
+==============================================
+
+ÉTAPE 1: Ouvrir server.js
+--------------------------
+Allez à la ligne 384 (juste après la route `app.delete('/admin/components/:id'...)`)
+
+ÉTAPE 2: Ajouter ce code APRÈS la ligne 384
+--------------------------------------------
+Copiez-collez exactement ceci:
+
+```javascript
+
+// Admin Featured Products Routes
+app.get('/admin/featured', requireAuth, async (req, res) => {
+  try {
+    const products = await Product.findAll({ order: [['featured', 'DESC'], ['createdAt', 'DESC']] });
+    res.render('admin/featured', { title: 'Derniers Arrivages', products });
+  } catch (e) {
+    console.error('Erreur featured:', e);
+    res.status(500).send('Erreur serveur');
+  }
+});
+
+app.post('/admin/products/:id/featured', requireAuth, async (req, res) => {
+  try {
+    const product = await Product.findByPk(req.params.id);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Produit non trouvé' });
+    }
+    product.featured = !product.featured;
+    await product.save();
+    res.json({ success: true, featured: product.featured });
+  } catch (e) {
+    console.error('Erreur toggle featured:', e);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+```
+
+ÉTAPE 3: Vérifier
+------------------
+- Sauvegardez le fichier
+- Le lien "Derniers Arrivages" est déjà ajouté dans views/layouts/admin.ejs
+- Redémarrez le serveur (Ctrl+C puis `node server.js`)
+- Accédez à http://localhost:3000/admin/featured
+
+<li class="nav-item">
+    <a class="nav-link <%= title === 'Derniers Arrivages' ? 'active' : '' %>" href="/admin/featured">
+        <i class="bi bi-star"></i> Derniers Arrivages
+    </a>
+</li>

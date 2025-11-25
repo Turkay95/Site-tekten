@@ -5,7 +5,7 @@ const isAuthenticated = (req, res, next) => {
   if (req.session.isAuthenticated) {
     return next();
   }
-  res.redirect('/admin/login');
+  res.redirect('/tekten1453istanbul');
 };
 
 // Affiche le formulaire de connexion
@@ -19,11 +19,11 @@ const showLogin = (req, res) => {
 // Traite la tentative de connexion
 const login = async (req, res) => {
   const { password } = req.body;
-  
+
   try {
     // Vérifier le mot de passe (dans un cas réel, il faudrait vérifier contre une base de données)
     const isMatch = await bcrypt.compare(password, process.env.ADMIN_PASSWORD);
-    
+
     if (isMatch) {
       // Créer une session
       req.session.isAuthenticated = true;
@@ -45,7 +45,7 @@ const logout = (req, res) => {
     if (err) {
       console.error('Erreur lors de la déconnexion:', err);
     }
-    res.redirect('/admin/login');
+    res.redirect('/tekten1453istanbul');
   });
 };
 

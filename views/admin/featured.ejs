@@ -1,0 +1,235 @@
+<style>
+    /* Dark Mode Modal Styles */
+    .modal-content {
+        background-color: var(--bg-darker, #0b1220);
+        color: #e2e8f0;
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+
+    .form-control,
+    .form-select {
+        background-color: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        color: #e2e8f0;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        background-color: rgba(15, 23, 42, 0.8);
+        border-color: var(--primary, #6366f1);
+        color: #fff;
+        box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25);
+    }
+
+    .form-control::placeholder {
+        color: #64748b;
+    }
+
+    .form-check-input {
+        background-color: rgba(15, 23, 42, 0.6);
+        border-color: rgba(148, 163, 184, 0.3);
+    }
+
+    .form-check-input:checked {
+        background-color: var(--primary, #6366f1);
+        border-color: var(--primary, #6366f1);
+    }
+</style>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Derniers Arrivages (Page d'accueil)</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+            data-bs-target="#addFeaturedModal">
+            <i class="bi bi-plus-circle"></i> Ajouter un Arrivage
+        </button>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <p class="text-muted">Gérez ici les produits affichés dans la section "Derniers Arrivages".</p>
+    </div>
+</div>
+
+<div class="row">
+    <% products.forEach(product=> { %>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 <%= product.featured ? 'border-primary' : '' %>" id="card-<%= product.id %>">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="badge bg-secondary">
+                        <%= product.category %>
+                    </span>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input featured-toggle" type="checkbox" role="switch"
+                            id="toggle-<%= product.id %>" data-id="<%= product.id %>" <%=product.featured ? 'checked'
+                            : '' %>>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <% if (product.image) { %>
+                            <img src="<%= product.image %>" alt="<%= product.name %>" class="rounded me-3"
+                                style="width: 60px; height: 60px; object-fit: cover;">
+                            <% } else { %>
+                                <div class="bg-secondary rounded me-3 d-flex align-items-center justify-content-center"
+                                    style="width: 60px; height: 60px;">
+                                    <i class="bi bi-image text-white"></i>
+                                </div>
+                                <% } %>
+                                    <div>
+                                        <h5 class="card-title mb-0">
+                                            <%= product.name %>
+                                        </h5>
+                                        <p class="card-text text-primary fw-bold mb-0">
+                                            <%= product.price %> €
+                                        </p>
+                                    </div>
+                    </div>
+                    <p class="card-text small text-muted text-truncate">
+                        <%= product.description %>
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted d-block">Stock: <%= product.stock %></small>
+                        <% if (!product.published) { %>
+                            <span class="badge bg-warning text-dark">Non publié</span>
+                            <% } else { %>
+                                <span class="badge bg-success">Publié</span>
+                                <% } %>
+                    </div>
+                    <a href="/admin/products/<%= product.id %>/edit" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-pencil"></i> Modifier
+                    </a>
+                </div>
+            </div>
+        </div>
+        <% }); %>
+</div>
+
+<!-- Modal Ajouter Arrivage -->
+<div class="modal fade" id="addFeaturedModal" tabindex="-1" aria-labelledby="addFeaturedModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addFeaturedModalLabel">Ajouter un Dernier Arrivage</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="/admin/products/add" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="featured" value="on">
+                    <input type="hidden" name="returnUrl" value="/admin/featured">
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Nom du produit <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="category" class="form-label">Catégorie <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="" disabled selected>Sélectionnez une catégorie</option>
+                                    <% categories.forEach(category=> { %>
+                                        <option value="<%= category %>">
+                                            <%= category %>
+                                        </option>
+                                        <% }); %>
+                                </select>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label for="price" class="form-label">Prix (€) <span
+                                                class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" id="price" name="price" step="0.01"
+                                            min="0" required>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label for="stock" class="form-label">Stock <span
+                                                class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" id="stock" name="stock" min="0"
+                                            value="0" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="published" name="published" checked>
+                                <label class="form-check-label" for="published">Publié immédiatement</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="image" class="form-label">Image</label>
+                                <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description <span
+                                        class="text-danger">*</span></label>
+                                <textarea class="form-control" id="description" name="description" rows="4"
+                                    required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Ajouter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.featured-toggle').forEach(toggle => {
+        toggle.addEventListener('change', async (e) => {
+            const id = e.target.dataset.id;
+            const card = document.getElementById(`card-${id}`);
+
+            try {
+                const response = await fetch(`/admin/products/${id}/featured`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.featured) {
+                        card.classList.add('border-primary');
+                    } else {
+                        card.remove();
+                    }
+                } else {
+                    alert('Erreur lors de la mise à jour');
+                    e.target.checked = !e.target.checked; // Revert
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Erreur de connexion');
+                e.target.checked = !e.target.checked; // Revert
+            }
+        });
+    });
+</script>
