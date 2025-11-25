@@ -47,10 +47,29 @@
         background-color: var(--primary, #6366f1);
         border-color: var(--primary, #6366f1);
     }
+
+    .product-card {
+        transition: all 0.3s ease;
+    }
+
+    .product-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .badge-category {
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
 </style>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Derniers Arrivages (Page d'accueil)</h1>
+    <div>
+        <h1 class="h2">Derniers Arrivages</h1>
+        <p class="text-muted mb-0">Gérez les produits affichés sur la page d'accueil</p>
+    </div>
     <div class="btn-toolbar mb-2 mb-md-0">
         <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
             data-bs-target="#addFeaturedModal">
@@ -59,177 +78,290 @@
     </div>
 </div>
 
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <p class="text-muted">Gérez ici les produits affichés dans la section "Derniers Arrivages".</p>
+<% if (products.length===0) { %>
+    <div class="alert alert-info d-flex align-items-center" role="alert">
+        <i class="bi bi-info-circle me-2"></i>
+        <div>
+            Aucun produit en "Derniers Arrivages" pour le moment. Cliquez sur "Ajouter un Arrivage" pour commencer.
+        </div>
     </div>
-</div>
+    <% } else { %>
+        <div class="alert alert-light d-flex align-items-center mb-4" role="alert">
+            <i class="bi bi-lightbulb text-warning me-2"></i>
+            <div>
+                <strong>
+                    <%= products.length %>
+                </strong> produit(s) affiché(s) dans la section "Derniers Arrivages" de la page d'accueil.
+            </div>
+        </div>
+        <% } %>
 
-<div class="row">
-    <% products.forEach(product=> { %>
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 <%= product.featured ? 'border-primary' : '' %>" id="card-<%= product.id %>">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span class="badge bg-secondary">
-                        <%= product.category %>
-                    </span>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input featured-toggle" type="checkbox" role="switch"
-                            id="toggle-<%= product.id %>" data-id="<%= product.id %>" <%=product.featured ? 'checked'
-                            : '' %>>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <% if (product.image) { %>
-                            <img src="<%= product.image %>" alt="<%= product.name %>" class="rounded me-3"
-                                style="width: 60px; height: 60px; object-fit: cover;">
-                            <% } else { %>
-                                <div class="bg-secondary rounded me-3 d-flex align-items-center justify-content-center"
-                                    style="width: 60px; height: 60px;">
-                                    <i class="bi bi-image text-white"></i>
+            <div class="row">
+                <% products.forEach(product=> { %>
+                    <div class="col-md-6 col-lg-4 mb-4" id="card-wrapper-<%= product.id %>">
+                        <div class="card h-100 product-card <%= product.featured ? 'border-primary' : '' %>"
+                            id="card-<%= product.id %>">
+                            <div class="card-header d-flex justify-content-between align-items-center bg-dark">
+                                <span class="badge badge-category <%= 
+                        product.category === 'desktop' ? 'bg-info' : 
+                        product.category === 'laptop' ? 'bg-purple' : 
+                        product.category === 'mobile' ? 'bg-warning' : 
+                        'bg-secondary' 
+                    %>">
+                                    <%= product.category %>
+                                </span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <% if (!product.published) { %>
+                                        <span class="badge bg-warning text-dark" title="Non publié">
+                                            <i class="bi bi-eye-slash"></i>
+                                        </span>
+                                        <% } else { %>
+                                            <span class="badge bg-success" title="Publié">
+                                                <i class="bi bi-eye"></i>
+                                            </span>
+                                            <% } %>
+                                                <div class="form-check form-switch mb-0">
+                                                    <input class="form-check-input featured-toggle" type="checkbox"
+                                                        role="switch" id="toggle-<%= product.id %>"
+                                                        data-id="<%= product.id %>" <%=product.featured ? 'checked' : ''
+                                                        %>
+                                                    title="Activer/Désactiver comme arrivage">
+                                                </div>
                                 </div>
-                                <% } %>
-                                    <div>
-                                        <h5 class="card-title mb-0">
+                            </div>
+
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-4">
+                                        <% if (product.image) { %>
+                                            <img src="<%= product.image %>" alt="<%= product.name %>"
+                                                class="img-fluid rounded shadow-sm"
+                                                style="width: 100%; height: 100px; object-fit: cover;">
+                                            <% } else { %>
+                                                <div class="bg-secondary rounded d-flex align-items-center justify-content-center"
+                                                    style="width: 100%; height: 100px;">
+                                                    <i class="bi bi-image text-white fs-2"></i>
+                                                </div>
+                                                <% } %>
+                                    </div>
+                                    <div class="col-8">
+                                        <h5 class="card-title mb-2 text-truncate" title="<%= product.name %>">
                                             <%= product.name %>
                                         </h5>
-                                        <p class="card-text text-primary fw-bold mb-0">
+                                        <p class="card-text text-primary fw-bold fs-4 mb-1">
                                             <%= product.price %> €
                                         </p>
-                                    </div>
-                    </div>
-                    <p class="card-text small text-muted text-truncate">
-                        <%= product.description %>
-                    </p>
-                </div>
-                <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center">
-                    <div>
-                        <small class="text-muted d-block">Stock: <%= product.stock %></small>
-                        <% if (!product.published) { %>
-                            <span class="badge bg-warning text-dark">Non publié</span>
-                            <% } else { %>
-                                <span class="badge bg-success">Publié</span>
-                                <% } %>
-                    </div>
-                    <a href="/admin/products/<%= product.id %>/edit" class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-pencil"></i> Modifier
-                    </a>
-                </div>
-            </div>
-        </div>
-        <% }); %>
-</div>
-
-<!-- Modal Ajouter Arrivage -->
-<div class="modal fade" id="addFeaturedModal" tabindex="-1" aria-labelledby="addFeaturedModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addFeaturedModalLabel">Ajouter un Dernier Arrivage</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form action="/admin/products/add" method="POST" enctype="multipart/form-data">
-                    <input type="hidden" name="featured" value="on">
-                    <input type="hidden" name="returnUrl" value="/admin/featured">
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="name" class="form-label">Nom du produit <span
-                                        class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="name" name="name" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="category" class="form-label">Catégorie <span
-                                        class="text-danger">*</span></label>
-                                <select class="form-select" id="category" name="category" required>
-                                    <option value="" disabled selected>Sélectionnez une catégorie</option>
-                                    <% categories.forEach(category=> { %>
-                                        <option value="<%= category %>">
-                                            <%= category %>
-                                        </option>
-                                        <% }); %>
-                                </select>
-                            </div>
-                            <div class="row">
-                                <div class="col-6">
-                                    <div class="mb-3">
-                                        <label for="price" class="form-label">Prix (€) <span
-                                                class="text-danger">*</span></label>
-                                        <input type="number" class="form-control" id="price" name="price" step="0.01"
-                                            min="0" required>
+                                        <p class="card-text">
+                                            <small class="text-muted">
+                                                <i class="bi bi-box-seam"></i> Stock: <%= product.stock %>
+                                            </small>
+                                        </p>
                                     </div>
                                 </div>
-                                <div class="col-6">
-                                    <div class="mb-3">
-                                        <label for="stock" class="form-label">Stock <span
-                                                class="text-danger">*</span></label>
-                                        <input type="number" class="form-control" id="stock" name="stock" min="0"
-                                            value="0" required>
-                                    </div>
-                                </div>
+
+                                <% if (product.description) { %>
+                                    <p class="card-text small text-muted mt-3 mb-0" style="
+                            display: -webkit-box;
+                            -webkit-line-clamp: 2;
+                            -webkit-box-orient: vertical;
+                            overflow: hidden;
+                        ">
+                                        <%= product.description %>
+                                    </p>
+                                    <% } %>
                             </div>
-                            <div class="mb-3 form-check">
-                                <input type="checkbox" class="form-check-input" id="published" name="published" checked>
-                                <label class="form-check-label" for="published">Publié immédiatement</label>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="image" class="form-label">Image</label>
-                                <input type="file" class="form-control" id="image" name="image" accept="image/*">
-                            </div>
-                            <div class="mb-3">
-                                <label for="description" class="form-label">Description <span
-                                        class="text-danger">*</span></label>
-                                <textarea class="form-control" id="description" name="description" rows="4"
-                                    required></textarea>
+
+                            <div
+                                class="card-footer bg-transparent border-top d-flex justify-content-between align-items-center gap-2">
+                                <a href="/admin/products/<%= product.id %>/edit"
+                                    class="btn btn-sm btn-outline-primary flex-fill" title="Modifier ce produit">
+                                    <i class="bi bi-pencil"></i> Modifier
+                                </a>
+                                <button class="btn btn-sm btn-outline-danger delete-btn" data-id="<%= product.id %>"
+                                    data-name="<%= product.name %>" title="Supprimer ce produit">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-primary">Ajouter</button>
-                    </div>
-                </form>
+                    <% }); %>
             </div>
-        </div>
-    </div>
-</div>
 
-<script>
-    document.querySelectorAll('.featured-toggle').forEach(toggle => {
-        toggle.addEventListener('change', async (e) => {
-            const id = e.target.dataset.id;
-            const card = document.getElementById(`card-${id}`);
+            <!-- Modal Ajouter Arrivage -->
+            <div class="modal fade" id="addFeaturedModal" tabindex="-1" aria-labelledby="addFeaturedModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="addFeaturedModalLabel">
+                                <i class="bi bi-plus-circle text-primary me-2"></i>
+                                Ajouter un Dernier Arrivage
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form action="/admin/products/add" method="POST" enctype="multipart/form-data"
+                                id="addFeaturedForm">
+                                <input type="hidden" name="featured" value="on">
+                                <input type="hidden" name="returnUrl" value="/admin/featured">
 
-            try {
-                const response = await fetch(`/admin/products/${id}/featured`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="name" class="form-label">Nom du produit <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="name" name="name" required
+                                                placeholder="Ex: MacBook Air M2">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="category" class="form-label">Catégorie <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-select" id="category" name="category" required>
+                                                <option value="" disabled selected>Sélectionnez une catégorie</option>
+                                                <% categories.forEach(category=> { %>
+                                                    <option value="<%= category %>">
+                                                        <%= category %>
+                                                    </option>
+                                                    <% }); %>
+                                            </select>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="mb-3">
+                                                    <label for="price" class="form-label">Prix (€) <span
+                                                            class="text-danger">*</span></label>
+                                                    <input type="number" class="form-control" id="price" name="price"
+                                                        step="0.01" min="0" required placeholder="999.99">
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="mb-3">
+                                                    <label for="stock" class="form-label">Stock <span
+                                                            class="text-danger">*</span></label>
+                                                    <input type="number" class="form-control" id="stock" name="stock"
+                                                        min="0" value="0" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3 form-check">
+                                            <input type="checkbox" class="form-check-input" id="published"
+                                                name="published" checked>
+                                            <label class="form-check-label" for="published">
+                                                Publié immédiatement
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="image" class="form-label">Image</label>
+                                            <input type="file" class="form-control" id="image" name="image"
+                                                accept="image/*">
+                                            <small class="form-text text-muted">
+                                                Formats acceptés: JPG, PNG, GIF, WebP (max 5MB)
+                                            </small>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="description" class="form-label">Description <span
+                                                    class="text-danger">*</span></label>
+                                            <textarea class="form-control" id="description" name="description" rows="6"
+                                                required placeholder="Décrivez le produit..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Annuler</button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-check-circle me-1"></i> Ajouter
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                // Toggle featured status
+                document.querySelectorAll('.featured-toggle').forEach(toggle => {
+                    toggle.addEventListener('change', async (e) => {
+                        const id = e.target.dataset.id;
+                        const card = document.getElementById(`card-${id}`);
+                        const wrapper = document.getElementById(`card-wrapper-${id}`);
+
+                        try {
+                            const response = await fetch(`/admin/products/${id}/featured`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                if (data.featured) {
+                                    card.classList.add('border-primary');
+                                } else {
+                                    // Remove from view with animation
+                                    wrapper.style.transition = 'opacity 0.3s ease';
+                                    wrapper.style.opacity = '0';
+                                    setTimeout(() => {
+                                        wrapper.remove();
+                                        // Check if no products left
+                                        if (document.querySelectorAll('[id^="card-wrapper-"]').length === 0) {
+                                            location.reload();
+                                        }
+                                    }, 300);
+                                }
+                            } else {
+                                alert('Erreur lors de la mise à jour');
+                                e.target.checked = !e.target.checked;
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                            alert('Erreur de connexion');
+                            e.target.checked = !e.target.checked;
+                        }
+                    });
                 });
 
-                const data = await response.json();
+                // Delete product
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const id = e.currentTarget.dataset.id;
+                        const name = e.currentTarget.dataset.name;
 
-                if (data.success) {
-                    if (data.featured) {
-                        card.classList.add('border-primary');
-                    } else {
-                        card.remove();
-                    }
-                } else {
-                    alert('Erreur lors de la mise à jour');
-                    e.target.checked = !e.target.checked; // Revert
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Erreur de connexion');
-                e.target.checked = !e.target.checked; // Revert
-            }
-        });
-    });
-</script>
+                        if (!confirm(`Êtes-vous sûr de vouloir supprimer "${name}" ?\n\nCette action est irréversible.`)) {
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch(`/admin/products/${id}?_method=DELETE`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+
+                            if (response.ok) {
+                                const wrapper = document.getElementById(`card-wrapper-${id}`);
+                                wrapper.style.transition = 'opacity 0.3s ease';
+                                wrapper.style.opacity = '0';
+                                setTimeout(() => {
+                                    wrapper.remove();
+                                    // Check if no products left
+                                    if (document.querySelectorAll('[id^="card-wrapper-"]').length === 0) {
+                                        location.reload();
+                                    }
+                                }, 300);
+                            } else {
+                                alert('Erreur lors de la suppression');
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                            alert('Erreur de connexion');
+                        }
+                    });
+                });
+            </script>
