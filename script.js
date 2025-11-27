@@ -15,6 +15,7 @@
  * @property {string} name
  * @property {number} price
  * @property {number} qty
+ * @property {string|null} description
  */
 
 /* =========================================
@@ -27,7 +28,7 @@ const AppState = {
     /** @type {Product[]} */
     products: [],
     config: {
-        cpu: null, motherboard: null, ram: null, gpu: null, ssd: null, case: null, psu: null
+        cpu: null, motherboard: null, ram: null, gpu: null, ssd: null, case: null, psu: null, cooling: null
     }
 };
 
@@ -111,7 +112,7 @@ const Chatbot = {
                     </button>
                 </div>
                 
-                <div id="chatbot-messages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50"></div>
+                <div id="chatbot-messages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-5"></div>
 
                 <div class="p-4 bg-white border-t border-slate-100 rounded-b-2xl">
                     <div class="flex gap-2 items-center bg-slate-50 p-1.5 rounded-full border border-slate-200 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all">
@@ -229,7 +230,7 @@ const Cart = {
 
         // Expose global for inline onclicks (legacy support)
         window.toggleCart = (show) => this.toggle(show);
-        window.addToCart = (id, name, price) => this.add(id, name, price);
+        window.addToCart = (id, name, price, description = null) => this.add(id, name, price, description);
         window.removeFromCart = (id) => this.remove(id);
     },
 
@@ -254,12 +255,12 @@ const Cart = {
         }
     },
 
-    add(id, name, price) {
+    add(id, name, price, description = null) {
         const existing = AppState.cart.find(item => item.id === id);
         if (existing) {
             existing.qty++;
         } else {
-            AppState.cart.push({ id, name, price, qty: 1 });
+            AppState.cart.push({ id, name, price, description, qty: 1 });
         }
         Utils.saveCart();
         this.updateDisplay();
@@ -296,12 +297,13 @@ const Cart = {
                 `;
             } else {
                 itemsEl.innerHTML = AppState.cart.map(item => `
-                    <div class="flex justify-between items-center bg-slate-800/50 p-4 rounded-xl border border-white/5 animate-fade-in-up">
-                        <div>
+                    <div class="flex justify-between items-start bg-slate-800/50 p-4 rounded-xl border border-white/5 animate-fade-in-up">
+                        <div class="flex-1">
                             <h4 class="font-bold text-white text-sm">${Utils.escapeHtml(item.name)}</h4>
+                            ${item.description ? `<div class="text-[10px] text-slate-400 mt-1 leading-tight border-l-2 border-indigo-500 pl-2 my-2">${item.description.replace(/\n/g, '<br>')}</div>` : ''}
                             <p class="text-xs text-slate-400 mt-1">${item.qty} x ${Utils.formatPrice(item.price)}</p>
                         </div>
-                        <button onclick="window.removeFromCart('${item.id}')" class="text-red-400 hover:text-red-300 p-2 hover:bg-red-400/10 rounded-lg transition-colors">
+                        <button onclick="window.removeFromCart('${item.id}')" class="text-red-400 hover:text-red-300 p-2 hover:bg-red-400/10 rounded-lg transition-colors ml-2">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -331,17 +333,9 @@ const Shop = {
 
     async loadProducts() {
         try {
-            // Simulate API latency
-            // await new Promise(r => setTimeout(r, 500));
-
-            AppState.products = [
-                { id: 101, name: "PC Gamer Starter", category: "desktop", price: 999, image: "https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=500" },
-                { id: 102, name: "MacBook Air M2", category: "laptop", price: 1199, image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500" },
-                { id: 103, name: "iPhone 15", category: "mobile", price: 969, image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500" },
-                { id: 104, name: "Samsung S24 Ultra", category: "mobile", price: 1159, image: "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=500" },
-                { id: 105, name: "Asus ROG Zephyrus", category: "laptop", price: 2499, image: "https://images.unsplash.com/photo-1531297461136-82lw9z2l19?w=500" },
-                { id: 106, name: "Clavier Mécanique", category: "accessoire", price: 129, image: "https://images.unsplash.com/photo-1595225476474-87563907a212?w=500" }
-            ];
+            const response = await fetch('/api/shop');
+            if (!response.ok) throw new Error('Network response was not ok');
+            AppState.products = await response.json();
         } catch (error) {
             console.error('Failed to load products', error);
             const grid = Utils.$('#shop-grid');
@@ -355,10 +349,15 @@ const Shop = {
 
         const items = category === 'all' ? AppState.products : AppState.products.filter(p => p.category === category);
 
+        if (items.length === 0) {
+            grid.innerHTML = '<p class="text-slate-400 text-center col-span-full">Aucun produit trouvé.</p>';
+            return;
+        }
+
         grid.innerHTML = items.map(p => `
             <div class="bg-slate-800 rounded-2xl overflow-hidden border border-white/5 group hover:border-indigo-500/50 transition-all duration-300 animate-fade-in-up">
                 <div class="h-48 overflow-hidden relative">
-                    <img src="${p.image}" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-700" alt="${Utils.escapeHtml(p.name)}">
+                    <img src="${p.image || 'https://via.placeholder.com/500x300?text=No+Image'}" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-700" alt="${Utils.escapeHtml(p.name)}">
                     <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60"></div>
                 </div>
                 <div class="p-5">
@@ -401,104 +400,182 @@ const Shop = {
    5. BUILDER MODULE
    ========================================= */
 const Builder = {
-    parts: {
-        cpu: [
-            { id: 'c1', name: "Intel Core i5-13600K", price: 340, image: "https://via.placeholder.com/50?text=i5" },
-            { id: 'c2', name: "Intel Core i7-14700K", price: 460, image: "https://via.placeholder.com/50?text=i7" },
-            { id: 'c3', name: "Intel Core i9-14900K", price: 650, image: "https://via.placeholder.com/50?text=i9" },
-            { id: 'c4', name: "AMD Ryzen 7 7800X3D", price: 430, image: "https://via.placeholder.com/50?text=R7" }
-        ],
-        motherboard: [
-            { id: 'm1', name: "MSI B760 Gaming Plus", price: 180, image: "https://via.placeholder.com/50?text=MB" },
-            { id: 'm2', name: "Asus ROG Strix Z790", price: 450, image: "https://via.placeholder.com/50?text=ROG" }
-        ],
-        ram: [
-            { id: 'r1', name: "Corsair Vengeance 32Go DDR5", price: 130, image: "https://via.placeholder.com/50?text=RAM" },
-            { id: 'r2', name: "Kingston Fury 16Go DDR5", price: 80, image: "https://via.placeholder.com/50?text=RAM" }
-        ],
-        gpu: [
-            { id: 'g1', name: "NVIDIA RTX 4060", price: 330, image: "https://via.placeholder.com/50?text=4060" },
-            { id: 'g2', name: "NVIDIA RTX 4070 Super", price: 680, image: "https://via.placeholder.com/50?text=4070" },
-            { id: 'g3', name: "NVIDIA RTX 4090", price: 2100, image: "https://via.placeholder.com/50?text=4090" }
-        ],
-        ssd: [
-            { id: 's1', name: "Samsung 980 Pro 1To", price: 100, image: "https://via.placeholder.com/50?text=SSD" },
-            { id: 's2', name: "Crucial P3 2To", price: 140, image: "https://via.placeholder.com/50?text=SSD" }
-        ],
-        case: [
-            { id: 'ca1', name: "Corsair 4000D Airflow", price: 105, image: "https://via.placeholder.com/50?text=Case" },
-            { id: 'ca2', name: "NZXT H9 Flow", price: 190, image: "https://via.placeholder.com/50?text=Case" }
-        ],
-        psu: [
-            { id: 'p1', name: "Corsair RM850e (850W)", price: 130, image: "https://via.placeholder.com/50?text=PSU" },
-            { id: 'p2', name: "MSI A1000G (1000W)", price: 180, image: "https://via.placeholder.com/50?text=PSU" }
-        ]
-    },
+    parts: {}, // Will be loaded from API
 
-    init() {
+    async init() {
         if (!Utils.$('#builder-container')) return;
 
+        await this.loadParts();
         this.render();
         this.updateSummary();
 
         // Expose for inline onclicks
         window.toggleBuilderSection = (key) => this.toggleSection(key);
         window.selectPart = (type, id) => this.selectPart(type, id);
+        window.filterBuilderParts = (type, query) => this.filterParts(type, query);
+    },
+
+    async loadParts() {
+        try {
+            const res = await fetch('/api/config');
+            if (res.ok) {
+                this.parts = await res.json();
+            } else {
+                console.error('Failed to load config parts');
+            }
+        } catch (e) {
+            console.error('Error loading parts:', e);
+        }
+    },
+
+    checkCompatibility() {
+        const { cpu, motherboard, ram, gpu, psu } = AppState.config;
+
+        // Reset compatibility
+        Object.keys(this.parts).forEach(type => {
+            this.parts[type].forEach(p => p.incompatible = false);
+        });
+
+        // 1. CPU <-> Motherboard (Socket)
+        if (cpu) {
+            this.parts.motherboard.forEach(m => {
+                if (m.socket && cpu.socket && m.socket !== cpu.socket) m.incompatible = true;
+            });
+        }
+        if (motherboard) {
+            this.parts.cpu.forEach(c => {
+                if (c.socket && motherboard.socket && c.socket !== motherboard.socket) c.incompatible = true;
+            });
+        }
+
+        // 2. Motherboard <-> RAM (Memory Type)
+        if (motherboard && motherboard.specs && motherboard.specs.memory_type) {
+            const type = motherboard.specs.memory_type; // e.g. "DDR5"
+            this.parts.ram.forEach(r => {
+                const ramType = r.specs.type || r.name;
+                if (ramType && !ramType.includes(type)) r.incompatible = true;
+            });
+        }
+
+        // 3. Wattage
+        let totalTDP = 0;
+        if (cpu && cpu.specs && cpu.specs.tdp) totalTDP += (parseInt(cpu.specs.tdp) || 0);
+        if (gpu && gpu.specs && gpu.specs.tdp) totalTDP += (parseInt(gpu.specs.tdp) || 0);
+        totalTDP += 100; // System overhead
+
+        if (totalTDP > 0) {
+            this.parts.psu.forEach(p => {
+                if (p.specs && p.specs.wattage) {
+                    const wattage = parseInt(p.specs.wattage);
+                    if (wattage < totalTDP) p.incompatible = true;
+                }
+            });
+        }
+
+        // Re-render visible lists to show incompatibility
+        Object.keys(this.parts).forEach(key => {
+            const input = Utils.$(`#search-${key}`);
+            const query = input ? input.value : '';
+            this.renderPartsList(key, query);
+        });
     },
 
     render() {
         const container = Utils.$('#builder-container');
-        const labels = { cpu: "1. Processeur", motherboard: "2. Carte Mère", ram: "3. Mémoire RAM", gpu: "4. Carte Graphique", ssd: "5. Stockage", case: "6. Boîtier", psu: "7. Alimentation" };
+        if (!container) return;
+
+        const labels = { cpu: "1. Processeur", motherboard: "2. Carte Mère", ram: "3. Mémoire RAM", gpu: "4. Carte Graphique", ssd: "5. Stockage", case: "6. Boîtier", psu: "7. Alimentation", cooling: "8. Refroidissement" };
 
         container.innerHTML = Object.keys(this.parts).map(key => `
             <div class="mb-4 bg-slate-800 rounded-xl border border-white/5 overflow-hidden">
                 <button id="header-${key}" onclick="window.toggleBuilderSection('${key}')" class="w-full text-left p-4 font-bold flex justify-between items-center hover:bg-white/5 transition-colors">
-                    <span class="text-white">${labels[key]}</span>
+                    <span class="text-white">${labels[key] || key.toUpperCase()}</span>
                     <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400 transform transition-transform duration-300"></i>
                 </button>
                 <div id="content-${key}" class="hidden p-4 bg-slate-900/50 border-t border-white/5">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        ${this.parts[key].map(p => `
-                            <div id="card-${p.id}" onclick="window.selectPart('${key}', '${p.id}')" class="part-card cursor-pointer bg-slate-800 p-3 rounded-lg border border-white/5 flex justify-between items-center hover:border-indigo-500/50 transition-all">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center">
-                                        <i data-lucide="cpu" class="w-5 h-5 text-slate-400"></i>
-                                    </div>
-                                    <span class="font-bold text-sm text-slate-200">${p.name}</span>
-                                </div>
-                                <span class="text-indigo-400 font-bold">${p.price}€</span>
-                            </div>
-                        `).join('')}
+                    <div class="mb-3">
+                        <input type="text" id="search-${key}" placeholder="Rechercher..." 
+                               oninput="window.filterBuilderParts('${key}', this.value)"
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-500">
+                    </div>
+                    <div id="list-${key}" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        ${this.getPartsHTML(key)}
                     </div>
                 </div>
             </div>
         `).join('');
 
-        // Open first section
-        this.toggleSection('cpu');
         if (window.lucide) lucide.createIcons();
     },
 
+    filterParts(type, query) {
+        const list = Utils.$(`#list-${type}`);
+        if (list) {
+            list.innerHTML = this.getPartsHTML(type, query);
+            if (window.lucide) lucide.createIcons();
+        }
+    },
+
+    getPartsHTML(type, query = '') {
+        const parts = this.parts[type].filter(p => {
+            // Filter by search query
+            const matchesQuery = p.name.toLowerCase().includes(query.toLowerCase()) ||
+                (p.brand && p.brand.toLowerCase().includes(query.toLowerCase()));
+
+            // Filter by compatibility (hide if incompatible)
+            const isCompatible = !p.incompatible;
+
+            return matchesQuery && isCompatible;
+        });
+
+        if (parts.length === 0) {
+            return '<div class="col-span-full text-center text-slate-500 text-sm py-4">Aucun composant compatible trouvé.</div>';
+        }
+
+        return parts.map(p => `
+            <div id="card-${p.id}" onclick="window.selectPart('${type}', ${p.id})" class="part-card relative cursor-pointer bg-slate-800 p-3 rounded-lg border border-white/5 flex justify-between items-center hover:border-indigo-500/50 transition-all">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center overflow-hidden">
+                        ${p.image ? `<img src="${p.image}" class="w-full h-full object-cover">` : `<i data-lucide="cpu" class="w-5 h-5 text-slate-400"></i>`}
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <span class="font-bold text-sm text-slate-200 block pr-16">${p.name}</span>
+                            ${p.brand ? `<span class="text-[10px] bg-slate-700 px-1.5 py-0.5 rounded text-slate-300 whitespace-nowrap hidden sm:inline-block">${p.brand}</span>` : ''}
+                        </div>
+                        ${p.socket ? `<span class="text-xs text-indigo-400 block mt-0.5">Socket: ${p.socket}</span>` : ''}
+                        ${p.description ? `<span class="text-xs text-slate-400 block mt-1 line-clamp-2">${p.description}</span>` : ''}
+                    </div>
+                </div>
+                <span class="text-indigo-400 font-bold whitespace-nowrap ml-2">${Utils.formatPrice(p.price)}</span>
+            </div>
+        `).join('');
+    },
+
+    renderPartsList(type, query) {
+        this.filterParts(type, query);
+    },
+
     toggleSection(key) {
-        // Close all
+        const content = Utils.$(`#content-${key}`);
+        const icon = Utils.$(`#header-${key} i`);
+        const isHidden = content.classList.contains('hidden');
+
         Utils.$$('[id^="content-"]').forEach(el => el.classList.add('hidden'));
         Utils.$$('[id^="header-"] i').forEach(el => el.style.transform = 'rotate(0deg)');
 
-        // Open target
-        const content = Utils.$(`#content-${key}`);
-        const icon = Utils.$(`#header-${key} i`);
-
-        if (content) {
+        if (isHidden) {
             content.classList.remove('hidden');
             if (icon) icon.style.transform = 'rotate(180deg)';
         }
     },
 
     selectPart(type, id) {
-        const part = this.parts[type].find(p => p.id === id);
+        const part = this.parts[type].find(p => p.id == id);
+        if (!part || part.incompatible) return;
+
         AppState.config[type] = part;
 
-        // Visual feedback
         const container = Utils.$(`#content-${type}`);
         container.querySelectorAll('.part-card').forEach(el => {
             el.classList.remove('border-indigo-500', 'bg-indigo-500/10');
@@ -511,9 +588,9 @@ const Builder = {
             card.classList.add('border-indigo-500', 'bg-indigo-500/10');
         }
 
+        this.checkCompatibility();
         this.updateSummary();
 
-        // Auto advance
         const types = Object.keys(this.parts);
         const idx = types.indexOf(type);
         if (idx < types.length - 1) {
@@ -532,7 +609,7 @@ const Builder = {
         let count = 0;
         list.innerHTML = '';
 
-        const labels = { cpu: "Processeur", motherboard: "Carte Mère", ram: "RAM", gpu: "Carte Graphique", ssd: "SSD", case: "Boîtier", psu: "Alim" };
+        const labels = { cpu: "Processeur", motherboard: "Carte Mère", ram: "RAM", gpu: "Carte Graphique", ssd: "SSD", case: "Boîtier", psu: "Alim", cooling: "Refroidissement" };
 
         Object.keys(this.parts).forEach(key => {
             const item = AppState.config[key];
@@ -542,12 +619,12 @@ const Builder = {
                 list.innerHTML += `
                     <div class="flex justify-between text-sm py-2 border-b border-white/5">
                         <span class="text-white">${item.name}</span>
-                        <span class="font-bold text-indigo-400">${item.price}€</span>
+                        <span class="font-bold text-indigo-400">${Utils.formatPrice(item.price)}</span>
                     </div>`;
             } else {
                 list.innerHTML += `
                     <div class="flex justify-between text-sm py-2 border-b border-white/5 text-slate-500">
-                        <span>${labels[key]}</span>
+                        <span>${labels[key] || key}</span>
                         <span>--</span>
                     </div>`;
             }
@@ -556,14 +633,24 @@ const Builder = {
         if (totalEl) totalEl.innerText = Utils.formatPrice(total);
 
         if (btn) {
-            if (count === 7) {
+            if (count === 8) {
                 btn.disabled = false;
                 btn.innerHTML = `Ajouter au panier <i data-lucide="shopping-cart" class="w-4 h-4 ml-2"></i>`;
                 btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                btn.onclick = () => window.addToCart('custom-' + Date.now(), 'PC Configuré Sur Mesure', total);
+
+                // Generate description string
+                const description = Object.keys(this.parts).map(key => {
+                    const item = AppState.config[key];
+                    return `${labels[key]}: ${item ? item.name : 'N/A'}`;
+                }).join('\\n');
+
+                // Escape description for use in onclick string
+                const safeDesc = description.replace(/'/g, "\\'");
+
+                btn.onclick = () => window.addToCart('custom-' + Date.now(), 'PC Configuré Sur Mesure', total, safeDesc);
             } else {
                 btn.disabled = true;
-                btn.innerText = `Configuration incomplète (${count}/7)`;
+                btn.innerText = `Configuration incomplète (${count}/8)`;
                 btn.classList.add('opacity-50', 'cursor-not-allowed');
             }
         }

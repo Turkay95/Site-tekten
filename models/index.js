@@ -31,6 +31,8 @@ const Component = sequelize.define('Component', {
   brand: { type: DataTypes.STRING },
   weight: { type: DataTypes.FLOAT },
   material: { type: DataTypes.STRING },
+  socket: { type: DataTypes.STRING },
+  specs: { type: DataTypes.JSON },
   published: { type: DataTypes.BOOLEAN, defaultValue: false }
 });
 

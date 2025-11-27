@@ -17,13 +17,13 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   fileFilter: (req, file, cb) => {
     const filetypes = /jpeg|jpg|png|gif/;
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = filetypes.test(file.mimetype);
-    
+
     if (mimetype && extname) {
       return cb(null, true);
     } else {
@@ -59,6 +59,7 @@ router.get('/products/add', productController.showAddForm);
 router.post('/products/add', upload.single('image'), productController.addProduct);
 router.get('/products/:id/edit', productController.showEditForm);
 router.put('/products/:id', upload.single('image'), productController.updateProduct);
+router.post('/products/:id/visibility', productController.toggleVisibility);
 router.delete('/products/:id', productController.deleteProduct);
 
 // Routes pour les composants

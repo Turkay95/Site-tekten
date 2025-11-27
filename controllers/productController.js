@@ -24,8 +24,8 @@ const showAddForm = (req, res) => {
 // Ajouter un nouveau produit
 const addProduct = async (req, res) => {
   try {
-    const { name, description, price, category, stock, featured } = req.body;
-    
+    const { name, description, price, category, stock, featured, published } = req.body;
+
     const productData = {
       name,
       description,
@@ -33,6 +33,7 @@ const addProduct = async (req, res) => {
       category,
       stock: parseInt(stock, 10),
       featured: featured === 'on',
+      isVisible: published === 'on',
       image: req.file ? `/uploads/${req.file.filename}` : ''
     };
 
@@ -65,13 +66,12 @@ const showEditForm = async (req, res) => {
     res.redirect('/admin/products');
   }
 };
-
 // Mettre à jour un produit
 const updateProduct = async (req, res) => {
   try {
-    const { name, description, price, category, stock, featured } = req.body;
+    const { name, description, price, category, stock, featured, published } = req.body;
     const product = await Product.findById(req.params.id);
-    
+
     if (!product) {
       req.flash('error', 'Produit non trouvé');
       return res.redirect('/admin/products');
@@ -83,7 +83,8 @@ const updateProduct = async (req, res) => {
       price: parseFloat(price),
       category,
       stock: parseInt(stock, 10),
-      featured: featured === 'on'
+      featured: featured === 'on',
+      isVisible: published === 'on'
     };
 
     // Si une nouvelle image est téléchargée
@@ -115,7 +116,7 @@ const updateProduct = async (req, res) => {
 const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    
+
     if (!product) {
       req.flash('error', 'Produit non trouvé');
       return res.redirect('/admin/products');
@@ -139,11 +140,30 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+// Basculer la visibilité d'un produit
+const toggleVisibility = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Produit non trouvé' });
+    }
+
+    product.isVisible = !product.isVisible;
+    await product.save();
+
+    res.json({ success: true, isVisible: product.isVisible });
+  } catch (error) {
+    console.error('Erreur lors du changement de visibilité:', error);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+};
+
 module.exports = {
   getAllProducts,
   showAddForm,
   addProduct,
   showEditForm,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  toggleVisibility
 };

@@ -207,7 +207,7 @@ app.get('/api/auth/status', (req, res) => {
 
 app.get('/api/shop', async (req, res) => {
   try {
-    const items = await Product.findAll({ where: { published: true }, order: [['createdAt', 'DESC']] });
+    const items = await Product.findAll({ where: { published: true, featured: false }, order: [['createdAt', 'DESC']] });
     res.json(items.map(p => ({ id: p.id, name: p.name, category: p.category, price: p.price, image: p.image })));
   } catch (e) {
     console.error('API shop error:', e);
@@ -222,7 +222,16 @@ app.get('/api/config', async (req, res) => {
     comps.forEach(c => {
       const key = (c.type || 'misc').toLowerCase();
       if (!grouped[key]) grouped[key] = [];
-      grouped[key].push({ id: c.id, name: c.name, price: c.price, image: c.image });
+      grouped[key].push({
+        id: c.id,
+        name: c.name,
+        price: c.price,
+        image: c.image,
+        description: c.description,
+        brand: c.brand,
+        specs: c.specs,
+        socket: c.socket
+      });
     });
     res.json(grouped);
   } catch (e) {
@@ -317,6 +326,17 @@ app.put('/admin/products/:id', requireAuth, upload.single('image'), async (req, 
   }
 });
 
+app.post('/admin/products/:id/published', requireAuth, async (req, res) => {
+  try {
+    const product = await Product.findByPk(req.params.id);
+    if (!product) return res.status(404).json({ success: false });
+    await product.update({ published: !product.published });
+    res.json({ success: true, published: product.published });
+  } catch (e) {
+    res.status(500).json({ success: false });
+  }
+});
+
 app.delete('/admin/products/:id', requireAuth, async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id);
@@ -352,16 +372,13 @@ app.post('/admin/products/:id/featured', requireAuth, async (req, res) => {
     if (!product) {
       return res.status(404).json({ success: false, message: 'Produit non trouvé' });
     }
-    product.featured = !product.featured;
-    await product.save();
+    await product.update({ featured: !product.featured });
     res.json({ success: true, featured: product.featured });
   } catch (e) {
-    console.error('Erreur toggle featured:', e);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    res.status(500).send('Erreur serveur');
   }
 });
 
-// Admin Components Routes
 app.get('/admin/components', requireAuth, async (req, res) => {
   try {
     const components = await Component.findAll({ order: [['createdAt', 'DESC']] });

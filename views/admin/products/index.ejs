@@ -1,5 +1,75 @@
+<style>
+    /* Dark Mode Modal Styles */
+    .modal-content {
+        background-color: var(--bg-darker, #0b1220);
+        color: #e2e8f0;
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+
+    .form-control,
+    .form-select {
+        background-color: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        color: #e2e8f0;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        background-color: rgba(15, 23, 42, 0.8);
+        border-color: var(--primary, #6366f1);
+        color: #fff;
+        box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25);
+    }
+
+    .form-control::placeholder {
+        color: #64748b;
+    }
+
+    .form-check-input {
+        background-color: rgba(15, 23, 42, 0.6);
+        border-color: rgba(148, 163, 184, 0.3);
+    }
+
+    .form-check-input:checked {
+        background-color: var(--primary, #6366f1);
+        border-color: var(--primary, #6366f1);
+    }
+
+    .product-card {
+        transition: all 0.3s ease;
+    }
+
+    .product-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .badge-category {
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+</style>
+
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Gestion de la Boutique</h1>
+    <div>
+        <h1 class="h2">Gestion de la Boutique</h1>
+        <p class="text-muted mb-0">Gérez tous les produits de votre catalogue</p>
+    </div>
     <div class="btn-toolbar mb-2 mb-md-0">
         <button onclick="openProductModal()" class="btn btn-sm btn-outline-primary">
             <i class="bi bi-plus-circle"></i> Ajouter un produit
@@ -7,257 +77,306 @@
     </div>
 </div>
 
-<div class="card">
-    <div class="card-body">
-        <% if (products && products.length> 0) { %>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead>
-                        <tr>
-                            <th>Image</th>
-                            <th>Nom</th>
-                            <th>Catégorie</th>
-                            <th>Prix</th>
-                            <th>Stock</th>
-                            <th>Mis en avant</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% products.forEach(product=> { %>
-                            <tr>
-                                <td>
-                                    <% if (product.image) { %>
-                                        <img src="<%= product.image %>" alt="<%= product.name %>"
-                                            style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
-                                        <% } else { %>
-                                            <div class="bg-light d-flex align-items-center justify-content-center"
-                                                style="width: 50px; height: 50px; border-radius: 4px;">
-                                                <i class="bi bi-image text-muted"></i>
-                                            </div>
-                                            <% } %>
-                                </td>
-                                <td>
-                                    <%= product.name %>
-                                </td>
-                                <td>
-                                    <span class="badge bg-primary">
-                                        <%= product.category %>
-                                    </span>
-                                </td>
-                                <td>
-                                    <%= product.price.toFixed(2) %> €
-                                </td>
-                                <td>
-                                    <span class="badge <%= product.stock > 0 ? 'bg-success' : 'bg-danger' %>">
-                                        <%= product.stock %>
-                                    </span>
-                                </td>
-                                <td>
-                                    <% if (product.featured) { %>
-                                        <span class="badge bg-warning text-dark">Oui</span>
-                                        <% } else { %>
-                                            <span class="badge bg-secondary">Non</span>
-                                            <% } %>
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <button onclick="openProductModal(<%= JSON.stringify(product) %>)"
-                                            class="btn btn-outline-primary" title="Modifier">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <button onclick="deleteProduct(<%= product.id %>)"
-                                            class="btn btn-outline-danger" title="Supprimer">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <% }); %>
-                    </tbody>
-                </table>
-            </div>
-            <% } else { %>
-                <div class="text-center py-5">
-                    <i class="bi bi-inbox" style="font-size: 3rem; color: #6c757d;"></i>
-                    <h5 class="mt-3">Aucun produit trouvé</h5>
-                    <p class="text-muted">Commencez par ajouter votre premier produit</p>
-                    <button onclick="openProductModal()" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Ajouter un produit
-                    </button>
-                </div>
-                <% } %>
-    </div>
-</div>
-
-<!-- Modal Ajout/Modification Produit -->
-<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="productModalLabel">Ajouter un produit</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="productForm" enctype="multipart/form-data">
-                    <input type="hidden" id="productId" name="id">
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="name" class="form-label">Nom du produit</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="category" class="form-label">Catégorie</label>
-                            <select class="form-select" id="category" name="category" required>
-                                <option value="desktop">PC Gamer</option>
-                                <option value="laptop">PC Portable</option>
-                                <option value="mobile">Smartphone</option>
-                                <option value="accessoire">Accessoire</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="price" class="form-label">Prix (€)</label>
-                            <input type="number" class="form-control" id="price" name="price" step="0.01" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="stock" class="form-label">Stock</label>
-                            <input type="number" class="form-control" id="stock" name="stock" value="1" required>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="image" class="form-label">Image</label>
-                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
-                        <div id="currentImage" class="mt-2 d-none">
-                            <small class="text-muted">Image actuelle :</small>
-                            <img src="" alt="Aperçu" class="d-block mt-1" style="height: 50px;">
-                        </div>
-                    </div>
-
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="published" name="published" checked>
-                        <label class="form-check-label" for="published">Publié sur le site</label>
-                    </div>
-
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="featured" name="featured">
-                        <label class="form-check-label" for="featured">Mettre en avant (Nouveauté)</label>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <button type="button" class="btn btn-primary" onclick="submitProductForm()">Enregistrer</button>
-            </div>
+<% if (products && products.length> 0) { %>
+    <div class="alert alert-light d-flex align-items-center mb-4" role="alert">
+        <i class="bi bi-box-seam text-primary me-2"></i>
+        <div>
+            <strong>
+                <%= products.length %>
+            </strong> produit(s) dans le catalogue.
         </div>
     </div>
-</div>
 
-<script>
-    let productModal;
+    <div class="row">
+        <% products.forEach(product=> { %>
+            <div class="col-md-6 col-lg-4 mb-4" id="card-wrapper-<%= product.id %>">
+                <div class="card h-100 product-card <%= product.featured ? 'border-warning' : '' %>"
+                    id="card-<%= product.id %>">
+                    <div class="card-header d-flex justify-content-between align-items-center bg-dark">
+                        <span class="badge badge-category <%= 
+                            product.category === 'desktop' ? 'bg-info' : 
+                            product.category === 'laptop' ? 'bg-purple' : 
+                            product.category === 'mobile' ? 'bg-warning' : 
+                            'bg-secondary' 
+                        %>">
+                            <%= product.category %>
+                        </span>
+                        <div class="d-flex align-items-center gap-2">
+                            <% if (product.featured) { %>
+                                <span class="badge bg-warning text-dark" title="Mis en avant">
+                                    <i class="bi bi-star-fill"></i>
+                                </span>
+                                <% } %>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input visibility-toggle" type="checkbox" role="switch"
+                                            id="toggle-<%= product.id %>" data-id="<%= product.id %>"
+                                            <%=product.published ? 'checked' : '' %>
+                                        title="Afficher/Masquer le produit">
+                                    </div>
+                        </div>
+                    </div>
 
-    document.addEventListener('DOMContentLoaded', function () {
-        productModal = new bootstrap.Modal(document.getElementById('productModal'));
-    });
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-4">
+                                <% if (product.image) { %>
+                                    <img src="<%= product.image %>" alt="<%= product.name %>"
+                                        class="img-fluid rounded shadow-sm"
+                                        style="width: 100%; height: 100px; object-fit: cover;">
+                                    <% } else { %>
+                                        <div class="bg-secondary rounded d-flex align-items-center justify-content-center"
+                                            style="width: 100%; height: 100px;">
+                                            <i class="bi bi-image text-white fs-2"></i>
+                                        </div>
+                                        <% } %>
+                            </div>
+                            <div class="col-8">
+                                <h5 class="card-title mb-2 text-truncate" title="<%= product.name %>">
+                                    <%= product.name %>
+                                </h5>
+                                <p class="card-text text-primary fw-bold fs-4 mb-1">
+                                    <%= product.price.toFixed(2) %> €
+                                </p>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        <i class="bi bi-box-seam"></i> Stock: <%= product.stock %>
+                                    </small>
+                                </p>
+                            </div>
+                        </div>
 
-    function openProductModal(product = null) {
-        const form = document.getElementById('productForm');
-        const title = document.getElementById('productModalLabel');
-        const idInput = document.getElementById('productId');
-        const currentImageDiv = document.getElementById('currentImage');
-        const currentImageImg = currentImageDiv.querySelector('img');
+                        <% if (product.description) { %>
+                            <p class="card-text small text-muted mt-3 mb-0"
+                                style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                <%= product.description %>
+                            </p>
+                            <% } %>
+                    </div>
 
-        form.reset();
-        idInput.value = '';
-        currentImageDiv.classList.add('d-none');
+                    <div
+                        class="card-footer bg-transparent border-top d-flex justify-content-between align-items-center gap-2">
+                        <button onclick="openProductModal(<%= JSON.stringify(product) %>)"
+                            class="btn btn-sm btn-outline-primary flex-fill" title="Modifier">
+                            <i class="bi bi-pencil"></i> Modifier
+                        </button>
+                        <button onclick="deleteProduct('<%= product.id %>')" class="btn btn-sm btn-outline-danger"
+                            title="Supprimer">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <% }); %>
+    </div>
+    <% } else { %>
+        <div class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 3rem; color: #6c757d;"></i>
+            <h5 class="mt-3">Aucun produit trouvé</h5>
+            <p class="text-muted">Commencez par ajouter votre premier produit</p>
+            <button onclick="openProductModal()" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Ajouter un produit
+            </button>
+        </div>
+        <% } %>
 
-        if (product) {
-            title.textContent = 'Modifier le produit';
-            idInput.value = product.id;
-            document.getElementById('name').value = product.name;
-            document.getElementById('category').value = product.category;
-            document.getElementById('price').value = product.price;
-            document.getElementById('stock').value = product.stock;
-            document.getElementById('description').value = product.description || '';
-            document.getElementById('published').checked = product.published;
-            document.getElementById('featured').checked = product.featured;
+            <!-- Modal Ajout/Modification Produit -->
+            <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="productModalLabel">Ajouter un produit</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="productForm" enctype="multipart/form-data">
+                                <input type="hidden" id="productId" name="id">
 
-            if (product.image) {
-                currentImageImg.src = product.image;
-                currentImageDiv.classList.remove('d-none');
-            }
-        } else {
-            title.textContent = 'Ajouter un produit';
-            document.getElementById('published').checked = true;
-        }
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="name" class="form-label">Nom du produit <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="name" name="name" required
+                                            placeholder="Ex: PC Gamer Ultra">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="category" class="form-label">Catégorie <span
+                                                class="text-danger">*</span></label>
+                                        <select class="form-select" id="category" name="category" required>
+                                            <option value="desktop">PC Gamer</option>
+                                            <option value="laptop">PC Portable</option>
+                                            <option value="mobile">Smartphone</option>
+                                            <option value="accessoire">Accessoire</option>
+                                        </select>
+                                    </div>
+                                </div>
 
-        productModal.show();
-    }
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="price" class="form-label">Prix (€) <span
+                                                class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" id="price" name="price" step="0.01"
+                                            required placeholder="0.00">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="stock" class="form-label">Stock <span
+                                                class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" id="stock" name="stock" value="1"
+                                            required>
+                                    </div>
+                                </div>
 
-    async function submitProductForm() {
-        const form = document.getElementById('productForm');
-        const id = document.getElementById('productId').value;
-        const formData = new FormData(form);
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description <span
+                                            class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="description" name="description" rows="3"
+                                        required></textarea>
+                                </div>
 
-        // Handle checkboxes manually for FormData if needed, but standard FormData handles checked ones.
-        // However, unchecked checkboxes are not sent. Server expects 'on' or undefined.
-        // The server logic: req.body.published === 'on'.
-        // If checked, FormData sends 'on' (or value). If unchecked, nothing.
-        // This matches server logic.
+                                <div class="mb-3">
+                                    <label for="image" class="form-label">Image</label>
+                                    <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                                    <div id="currentImage" class="mt-2 d-none">
+                                        <small class="text-muted">Image actuelle :</small>
+                                        <img src="" alt="Aperçu" class="d-block mt-1 rounded" style="height: 60px;">
+                                    </div>
+                                </div>
 
-        const url = id ? `/admin/products/${id}?_method=PUT` : '/admin/products/add';
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3 form-check">
+                                            <input type="checkbox" class="form-check-input" id="published"
+                                                name="published" checked>
+                                            <label class="form-check-label" for="published">Publié sur le site</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3 form-check">
+                                            <input type="checkbox" class="form-check-input" id="featured"
+                                                name="featured">
+                                            <label class="form-check-label" for="featured">Mettre en avant
+                                                (Nouveauté)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                            <button type="button" class="btn btn-primary" onclick="submitProductForm()">
+                                <i class="bi bi-check-circle me-1"></i> Enregistrer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        try {
-            const res = await fetch(url, {
-                method: 'POST', // Method override handles PUT
-                body: formData,
-                headers: {
-                    'Accept': 'application/json'
+            <script>
+                let productModal;
+
+                document.addEventListener('DOMContentLoaded', function () {
+                    productModal = new bootstrap.Modal(document.getElementById('productModal'));
+
+                    // Visibility Toggle Logic
+                    document.querySelectorAll('.visibility-toggle').forEach(toggle => {
+                        toggle.addEventListener('change', async (e) => {
+                            const id = e.target.dataset.id;
+                            try {
+                                const response = await fetch(`/admin/products/${id}/published`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' }
+                                });
+                                const data = await response.json();
+                                if (!data.success) {
+                                    alert('Erreur lors de la mise à jour');
+                                    e.target.checked = !e.target.checked;
+                                }
+                            } catch (error) {
+                                console.error('Error:', error);
+                                alert('Erreur de connexion');
+                                e.target.checked = !e.target.checked;
+                            }
+                        });
+                    });
+                });
+
+                function openProductModal(product = null) {
+                    const form = document.getElementById('productForm');
+                    const title = document.getElementById('productModalLabel');
+                    const idInput = document.getElementById('productId');
+                    const currentImageDiv = document.getElementById('currentImage');
+                    const currentImageImg = currentImageDiv.querySelector('img');
+
+                    form.reset();
+                    idInput.value = '';
+                    currentImageDiv.classList.add('d-none');
+
+                    if (product) {
+                        title.textContent = 'Modifier le produit';
+                        idInput.value = product.id;
+                        document.getElementById('name').value = product.name;
+                        document.getElementById('category').value = product.category;
+                        document.getElementById('price').value = product.price;
+                        document.getElementById('stock').value = product.stock;
+                        document.getElementById('description').value = product.description || '';
+                        document.getElementById('published').checked = product.published !== false; // Default true
+                        document.getElementById('featured').checked = product.featured;
+
+                        if (product.image) {
+                            currentImageImg.src = product.image;
+                            currentImageDiv.classList.remove('d-none');
+                        }
+                    } else {
+                        title.textContent = 'Ajouter un produit';
+                        document.getElementById('published').checked = true;
+                    }
+
+                    productModal.show();
                 }
-            });
 
-            const data = await res.json();
-            if (data.success) {
-                productModal.hide();
-                window.location.reload(); // Reload to show changes
-            } else {
-                alert('Erreur lors de l\'enregistrement');
-            }
-        } catch (e) {
-            console.error('Error saving product:', e);
-            alert('Erreur serveur');
-        }
-    }
+                async function submitProductForm() {
+                    const form = document.getElementById('productForm');
+                    const id = document.getElementById('productId').value;
+                    const formData = new FormData(form);
 
-    async function deleteProduct(id) {
-        if (!confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) return;
+                    const url = id ? `/admin/products/${id}?_method=PUT` : '/admin/products/add';
 
-        try {
-            const res = await fetch(`/admin/products/${id}?_method=DELETE`, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json'
+                    try {
+                        const res = await fetch(url, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const data = await res.json();
+                        if (data.success || res.redirected) { // Handle redirect or JSON success
+                            productModal.hide();
+                            window.location.reload();
+                        } else {
+                            alert('Erreur lors de l\'enregistrement');
+                        }
+                    } catch (e) {
+                        console.error('Error saving product:', e);
+                        // If it's a redirect (opaque response), reload
+                        window.location.reload();
+                    }
                 }
-            });
 
-            const data = await res.json();
-            if (data.success) {
-                window.location.reload();
-            } else {
-                alert('Erreur lors de la suppression');
-            }
-        } catch (e) {
-            console.error('Error deleting product:', e);
-            alert('Erreur serveur');
-        }
-    }
-</script>
+                async function deleteProduct(id) {
+                    if (!confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) return;
+
+                    try {
+                        const res = await fetch(`/admin/products/${id}?_method=DELETE`, {
+                            method: 'POST'
+                        });
+
+                        if (res.ok) {
+                            window.location.reload();
+                        } else {
+                            alert('Erreur lors de la suppression');
+                        }
+                    } catch (e) {
+                        console.error('Error deleting product:', e);
+                        alert('Erreur serveur');
+                    }
+                }
+            </script>
